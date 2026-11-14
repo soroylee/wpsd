@@ -22,8 +22,6 @@ services:
       - ./website/logs/php83:/var/log/php
       # wwwroot
       - ./website/wwwroot:/wwwroot
-    networks:
-      - default
 
   mysql:
     image: mysql/mysql-server:8.0.32-1.2.11-server
@@ -36,18 +34,8 @@ services:
       - ./mysql/my.conf:/etc/my.cnf:ro
       - ./website/data:/var/lib/mysql/:rw
     restart: always
-    networks:
-      - default
     environment:
       MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
       MYSQL_ROOT_HOST: "%"
       MYSQL_ROOT_USER: "${MYSQL_ROOT_USER}"
       TZ: "$TZ"
-
-networks:
-  default:
-    driver: bridge
-    ipam:
-      driver: default
-      config:
-        - subnet: 18.0.0.0/24

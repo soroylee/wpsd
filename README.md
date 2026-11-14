@@ -29,10 +29,10 @@ cd $HOME/wpsd
 docker compose down
 
 # 创建并且后台运行方式启动所有容器
-docker-compose up -d
+docker compose up -d
 
 # 重启服务
-docker-compose restart <服务名>             
+docker compose restart <服务名>             
 
 # 重启
 sudo reboot
