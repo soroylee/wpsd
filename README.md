@@ -1,16 +1,21 @@
 # Install
 
-#### Download
+####  1.
 ```
-apt update && apt install git -y && git clone --depth 1 https://github.com/soroylee/wpsd
-```
-
-#### Deploy Environment
-```
-bash wpsd/install.sh
+sudo apt update && sudo apt install git -y 
 ```
 
-##### Add Sites
+#### 2. Download
 ```
-vhost.sh
+sudo git clone --depth 1 https://github.com/soroylee/wpsd
+```
+
+#### 3. Deploy Environment
+```
+sudo bash wpsd/install.sh
+```
+
+##### 4. Add Sites
+```
+sudo vhost.sh
 ```

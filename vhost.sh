@@ -12,6 +12,10 @@ DNMP_DIR=$(dirname "$SYMLINK_PATH")
 DNMP_DIR=$(realpath "$DNMP_DIR")
 # 加载公共变量
 source "$DNMP_DIR/common.sh"
+if [ ! -f "$DNMP_DIR/wordpress.zip" ]; then
+    echoRC "未找到 wordpress.zip, 请放到 $DNMP_DIR 后再执行."
+    exit 1
+fi
 # 加载.env
 source "$DNMP_DIR/.env"
 # 虚拟主机配置文件
@@ -91,6 +95,10 @@ function install_wp {
     db_prefix="$(random_str 3 | tr 'A-Z' 'a-z')_"
     database_password=$(random_str 12)
     site_doc_root="/wwwroot/$INPUT_DOMAIN_NAME"
+    if [ ! -f "$DNMP_DIR/wordpress.zip" ]; then
+        echoRC "未找到 wordpress.zip."
+        return 1
+    fi
     if ! docker exec -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql mysql -uroot -e "CREATE DATABASE \`$DATABASE_NAME\`;"; then
         echoRC "数据库创建失败."
         return 1
@@ -103,42 +111,37 @@ function install_wp {
         echoRC "数据库授权失败."
         return 1
     fi
-    if [ -f "$DNMP_DIR/wordpress.zip" ]; then
-        echoCC "使用本地 wordpress.zip"
-        extract_dir="$SITE_DOC_ROOT/.wp-extract"
+    echoCC "使用本地 wordpress.zip"
+    extract_dir="$SITE_DOC_ROOT/.wp-extract"
+    rm -rf "$extract_dir"
+    mkdir -p "$extract_dir"
+    unzip -q "$DNMP_DIR/wordpress.zip" -d "$extract_dir"
+    unzip_status=$?
+    if [ "$unzip_status" -gt 1 ]; then
         rm -rf "$extract_dir"
-        mkdir -p "$extract_dir"
-        unzip -q "$DNMP_DIR/wordpress.zip" -d "$extract_dir"
-        unzip_status=$?
-        if [ "$unzip_status" -gt 1 ]; then
-            rm -rf "$extract_dir"
-            echoRC "wordpress.zip 解压失败."
-            return 1
-        fi
-        if [ -f "$extract_dir/wordpress/wp-load.php" ]; then
-            src="$extract_dir/wordpress"
-        elif [ -f "$extract_dir/wp-load.php" ]; then
-            src="$extract_dir"
-        else
-            rm -rf "$extract_dir"
-            echoRC "wordpress.zip 不是 WordPress 程序包."
-            return 1
-        fi
-        if ! (
-            shopt -s dotglob
-            mv "$src"/* "$SITE_DOC_ROOT"/
-        ); then
-            rm -rf "$extract_dir"
-            echoRC "WordPress 文件就位失败."
-            return 1
-        fi
+        echoRC "wordpress.zip 解压失败."
+        return 1
+    fi
+    if [ -f "$extract_dir/wordpress/wp-load.php" ]; then
+        src="$extract_dir/wordpress"
+    elif [ -f "$extract_dir/wp-load.php" ]; then
+        src="$extract_dir"
+    else
         rm -rf "$extract_dir"
-        if [ ! -f "$SITE_DOC_ROOT/wp-load.php" ]; then
-            echoRC "WordPress 文件就位失败."
-            return 1
-        fi
-    elif ! docker exec nginx wp core download --locale=zh_CN --path="$site_doc_root" --allow-root; then
-        echoRC "WordPress 下载失败."
+        echoRC "wordpress.zip 不是 WordPress 程序包."
+        return 1
+    fi
+    if ! (
+        shopt -s dotglob
+        mv "$src"/* "$SITE_DOC_ROOT"/
+    ); then
+        rm -rf "$extract_dir"
+        echoRC "WordPress 文件就位失败."
+        return 1
+    fi
+    rm -rf "$extract_dir"
+    if [ ! -f "$SITE_DOC_ROOT/wp-load.php" ]; then
+        echoRC "WordPress 文件就位失败."
         return 1
     fi
     if ! docker exec nginx wp config create --dbname="$DATABASE_NAME" --dbuser="$DATABASE_NAME" --dbpass="$database_password" --dbprefix="$db_prefix" --dbhost=mysql:3306 --path="$site_doc_root" --allow-root --quiet; then
@@ -184,7 +187,10 @@ function create_site {
     else
         echo 'This a Temp Site.' > "$SITE_DOC_ROOT/index.php"
     fi
-    docker exec nginx chown -R "$NGINX_USER:$NGINX_GROUP" "/wwwroot/$INPUT_DOMAIN_NAME"
+    if ! docker exec nginx chmod -R 777 "/wwwroot/$INPUT_DOMAIN_NAME"; then
+        echoRC "站点目录权限设置失败."
+        return 1
+    fi
     if ! reload_nginx; then
         return 1
     fi
@@ -395,19 +401,6 @@ function site_restore {
     docker exec nginx chown -R "$NGINX_USER:$NGINX_GROUP" "/wwwroot/$SITE_HOSTNAME"
     echoCC "站点恢复成功"
 }
-# 修复站点文件权限
-function fix_site_file_permissions {
-    if ! site_exists; then
-        return 1
-    fi
-    site_hostname_get || return 1
-    if docker exec nginx chown -R "$NGINX_USER:$NGINX_GROUP" "/wwwroot/$SITE_HOSTNAME"; then
-        echoCC "站点文件权限修复成功"
-    else
-        echoRC "站点文件权限修复失败"
-        return 1
-    fi
-}
 # 安装phpMyAdmin
 function install_phpmyadmin {
     local phpmyadmin_dir secret_key
@@ -448,8 +441,7 @@ function site_cmd {
         echo -e "${SB}3${ED}.${LG}删除站点${ED}"
         echo -e "${SB}4${ED}.${LG}备份站点${ED}"
         echo -e "${SB}5${ED}.${LG}恢复站点${ED}"
-        echo -e "${SB}6${ED}.${LG}修复站点文件权限${ED}"
-        echo -e "${SB}7${ED}.${LG}安装phpMyAdmin${ED}"
+        echo -e "${SB}6${ED}.${LG}安装phpMyAdmin${ED}"
         echo -e "${SB}e${ED}.${LG}退出${ED}"
         echo -ne "${BC}请选择: ${ED}"
         read -r choice
@@ -459,8 +451,7 @@ function site_cmd {
             3) site_delete ;;
             4) site_backup ;;
             5) site_restore ;;
-            6) fix_site_file_permissions ;;
-            7) install_phpmyadmin ;;
+            6) install_phpmyadmin ;;
             e) break ;;
             *) echoCC "输入有误."
         esac

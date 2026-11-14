@@ -76,3 +76,11 @@ fi
 rm -rf /usr/local/bin/vhost.sh
 chmod +x $DNMP_DIR/vhost.sh
 ln -s $DNMP_DIR/vhost.sh /usr/local/bin/vhost.sh
+
+# docker 组由软件包创建。sudo 执行时把原来的登录用户加进去，root 本身不用加
+if [ -n "$SUDO_USER" ] && [ "$SUDO_USER" != "root" ]; then
+    usermod -aG docker "$SUDO_USER"
+    echoGC "已将 $SUDO_USER 加入 docker 组, 重新登录后才能直接运行 docker 和 vhost.sh."
+else
+    echoCC "以 root 直接执行, 未添加 docker 组用户."
+fi
