@@ -1,6 +1,6 @@
 # Windows 11 WSL 本地部署WordPess网站
 
-####  1.
+####  1. 更新源并安装必要包
 ```
 cd && sudo apt update && sudo apt install git -y 
 ```
