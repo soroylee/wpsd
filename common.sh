@@ -16,7 +16,7 @@ if [ ! -d "$LOGS_ROOT" ]; then
     mkdir -p $VHOSTS_CONF_DIR
     mkdir -p $MYSQL_DATA_DIR
     # 初始化站点日志目录
-    mkdir -p $LOGS_ROOT/{nginx,php83,certbot}
+    mkdir -p $LOGS_ROOT/{nginx,php83}
 fi
 
 # RC红色错误  GC绿色成功  LG浅绿输出  BC蓝色输入  SB天蓝确认  CC橙色提示  PC粉色强调

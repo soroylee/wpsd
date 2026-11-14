@@ -2,12 +2,12 @@
 
 #### Download
 ```
-apt update && apt install git -y && git clone --depth 1 https://github.com/mina998/wpdo5
+apt update && apt install git -y && git clone --depth 1 https://github.com/soroylee/wpsd
 ```
 
 #### Deploy Environment
 ```
-bash wpdo5/install.sh
+bash wpsd/install.sh
 ```
 
 ##### Add Sites

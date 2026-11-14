@@ -5,3 +5,4 @@ nohup.out
 docker-compose.yml.*
 website/
 .env
+wordpress.zip

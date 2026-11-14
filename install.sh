@@ -9,6 +9,12 @@ DNMP_DIR=$(realpath "$DNMP_DIR")
 DNMP_ENV=$DNMP_DIR/.env
 # 加载公共变量
 source $DNMP_DIR/common.sh
+# 安装成功标记。放在生成密码之前，避免再次执行时改掉已有数据库密码
+INSTALLED_MARK=$DNMP_DIR/website/.installed
+if [ -f "$INSTALLED_MARK" ]; then
+    echoCC "已经安装完成, 不能再次执行. 重复执行会重置 MySQL 密码."
+    exit 1
+fi
 # 检查.env文件是否存在 不存在则创建
 if [ ! -f "$DNMP_ENV" ] ; then
     cp $DNMP_DIR/env.sample $DNMP_ENV
@@ -56,7 +62,11 @@ if [ -x "$(command -v docker)" ]; then
     echoSB "Start Docker Compose Service."
     cd $DNMP_DIR
     docker compose down >/dev/null 2>&1
-    docker compose up -d
+    if ! docker compose up -d; then
+        echoRR "Docker Compose Start Failed."
+        exit 1
+    fi
+    touch "$INSTALLED_MARK"
 else
     echoRR "Docker Install Failed."
     exit 1

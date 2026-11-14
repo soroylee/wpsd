@@ -23,8 +23,6 @@ services:
       - ./website/logs/php83:/var/log/php
       # wwwroot
       - ./website/wwwroot:/wwwroot
-    tmpfs:
-      - /var/run/nginx-cache:rw,noexec,nosuid,size=512m
     networks:
       - default
 
@@ -46,38 +44,6 @@ services:
       MYSQL_ROOT_HOST: "%"
       MYSQL_ROOT_USER: "${MYSQL_ROOT_USER}"
       TZ: "$TZ"
-
-  certbot:
-    image: certbot/certbot:latest
-    # build:
-    #   context: ./certbot
-    container_name: certbot
-    restart: always
-    # Nginx 容器之后启动
-    depends_on:
-      - nginx
-    volumes:
-      # ssl cert root
-      - ./website/letsencrypt:/etc/letsencrypt:rw
-      # wwwroot
-      - ./website/wwwroot:/wwwroot
-      # logs
-      - ./website/logs/certbot:/var/log/letsencrypt
-    entrypoint: []
-    command: ["tail", "-f", "/dev/null"]
-    networks:
-        - default
-
-  # memcached
-#  memcached:
-#    image: memcached:alpine
-#    container_name: memcached
-#    ports:
-#      - "11211:11211"
-#    environment:
-#       MEMCACHED_CACHE_SIZE: "128"
-#    networks:
-#      - default
 
 networks:
   default:
