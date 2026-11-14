@@ -60,7 +60,7 @@ if [ -x "$(command -v docker)" ]; then
     systemctl enable docker
     echoGC "Docker Install Success."
     echoSB "Start Docker Compose Service."
-    cd $DNMP_DIR
+    cd $DNMP_DIR && chmod 777 ./
     docker compose down >/dev/null 2>&1
     if ! docker compose up -d; then
         echoRR "Docker Compose Start Failed."

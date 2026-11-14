@@ -457,4 +457,5 @@ function site_cmd {
         esac
     done
 }
+echoCC "本脚本仅供本机开发使用, 不要在生产环境使用."
 site_cmd
