@@ -70,7 +70,8 @@ function random_str {
     head -c "$length" /dev/urandom | base64 | tr -d '/+='
 }
 function reload_nginx {
-    if ! docker exec nginx nginx -t; then
+    if ! docker exec nginx nginx -t >/dev/null 2>&1; then
+        docker exec nginx nginx -t
         echoRC "Nginx 配置检测失败."
         return 1
     fi
@@ -148,7 +149,7 @@ function install_wp {
         echoRC "WordPress 配置创建失败."
         return 1
     fi
-    if ! docker exec nginx wp core install --url="https://$INPUT_DOMAIN_NAME" --title="My Blog" --admin_user="$wp_user" --admin_password="$wp_pass" --admin_email="$wp_mail" --skip-email --path="$site_doc_root" --allow-root; then
+    if ! docker exec nginx wp core install --url="https://$INPUT_DOMAIN_NAME" --title="My Blog" --admin_user="$wp_user" --admin_password="$wp_pass" --admin_email="$wp_mail" --skip-email --path="$site_doc_root" --allow-root --quiet; then
         echoRC "WordPress 安装失败."
         return 1
     fi
@@ -187,7 +188,7 @@ function create_site {
     else
         echo 'This a Temp Site.' > "$SITE_DOC_ROOT/index.php"
     fi
-    if ! docker exec nginx chmod -R 777 "/wwwroot/$INPUT_DOMAIN_NAME"; then
+    if ! chmod -R 777 "$SITE_DOC_ROOT"; then
         echoRC "站点目录权限设置失败."
         return 1
     fi
