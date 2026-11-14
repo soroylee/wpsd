@@ -20,15 +20,26 @@ sudo bash wpsd/install.sh
 sudo vhost.sh
 ```
 
-#### 5. 常用指令
+#### 5. 常用指令 (可选)
 ```
 # 进入指定安装的wsl发型版
 wsl -d wpsd
+
+# 进入项目
+cd $HOME/wpsd 
+
+# 停止并删除容器 网络 图像和挂载卷
+docker compose down
+
+# 创建并且后台运行方式启动所有容器
+docker-compose up -d
+
+# 重启服务
+docker-compose restart <服务名>             
 
 # 重启
 sudo reboot
 
 # 终止 所有 WSL 2 虚拟机
 wsl --shutdown
-
 ```
