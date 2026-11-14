@@ -188,7 +188,11 @@ function create_site {
     else
         echo 'This a Temp Site.' > "$SITE_DOC_ROOT/index.php"
     fi
-    if ! chmod -R 777 "$SITE_DOC_ROOT"; then
+    if ! docker exec nginx chown -R "$NGINX_USER:$NGINX_GROUP" "/wwwroot/$INPUT_DOMAIN_NAME"; then
+        echoRC "站点目录所有者设置失败."
+        return 1
+    fi
+    if ! docker exec nginx chmod -R 777 "/wwwroot/$INPUT_DOMAIN_NAME"; then
         echoRC "站点目录权限设置失败."
         return 1
     fi
